@@ -1,5 +1,6 @@
+mod api;
+
 pub fn get_cik_from_ticker(ticker: &str) -> Option<String> {
-    // For example purpose, just return ticker uppercased as dummy CIK
     Some(ticker.to_ascii_uppercase())
 }
 
