@@ -5,6 +5,11 @@ pub fn get_cik_from_ticker(ticker: &str) -> Option<String> {
     Some(ticker.to_ascii_uppercase())
 }
 
+pub fn fetch_company_tickers_json_document(ticker: &str) -> Option<String> {
+    let json = fetch_cik_json_from_server().ok()?;
+    json.get(ticker).map(|ticker| ticker.cik_str.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -41,7 +46,8 @@ mod tests {
         }
         "#;
 
-        let parsed: std::collections::HashMap<String, serde_json::Value> = serde_json::from_str(json).unwrap();
+        let parsed: std::collections::HashMap<String, serde_json::Value> =
+            serde_json::from_str(json).unwrap();
 
         // Expected keys:
         let expected_keys: HashSet<_> = ["0", "1"].iter().cloned().collect();

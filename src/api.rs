@@ -10,7 +10,7 @@ pub struct CompanyTicker {
     pub title: String,
 }
 
-pub fn fetch_cik_json_from_server() -> std::io::Result<String> {
+pub fn fetch_cik_json_from_server() -> std::io::Result<HashMap<String, CompanyTicker>> {
     let mut stream = TcpStream::connect("www.sec.gov:80")?;
 
     let request = "\
@@ -38,10 +38,4 @@ pub fn fetch_cik_json_from_server() -> std::io::Result<String> {
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
     Ok(parsed)
-}
-
-pub fn parse_company_tickers(
-    json_str: &str,
-) -> Result<HashMap<String, CompanyTicker>, serde_json::Error> {
-    serde_json::from_str(json_str)
 }
