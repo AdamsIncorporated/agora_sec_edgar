@@ -1,4 +1,5 @@
 mod api;
+mod constants;
 
 pub fn get_cik_from_ticker(ticker: &str) -> Option<String> {
     Some(ticker.to_ascii_uppercase())
