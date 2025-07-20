@@ -5,7 +5,7 @@ pub fn get_cik_from_ticker(ticker: &str) -> Option<String> {
     Some(ticker.to_ascii_uppercase())
 }
 
-fn fetch_company_tickers_json_document(ticker: &str) -> Option<String> {
+fn fetch_company_meta_data(ticker: &str) -> Option<String> {
     let company_tickers: api::CompanyTickers = fetch_cik_json_from_server().ok()?;
     let Some(ticker) = lookup_cik_from_ticker(&company_tickers, ticker) else {
         return None;

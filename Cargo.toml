@@ -1,5 +1,12 @@
 [package]
 name = "agora-sec-edgar"
+authors = ["Samuel Grant Adams"]
+description = "A library for fetching and processing SEC EDGAR data"
+license = "MIT"
+repository = "https://github.com/AdamsIncorporated/agora-sec-edgar.git"
+readme = "README.md"
+keywords = ["SEC", "EDGAR", "finance", "Rust"]
+categories = ["finance", "data processing"]
 version = "0.1.0"
 edition = "2024"
 
