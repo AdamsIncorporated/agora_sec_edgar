@@ -1,4 +1,5 @@
 mod api;
+mod lookup;
 use api::fetch_cik_json_from_server;
 
 pub fn get_cik_from_ticker(ticker: &str) -> Option<String> {
@@ -7,7 +8,7 @@ pub fn get_cik_from_ticker(ticker: &str) -> Option<String> {
 
 pub fn fetch_company_tickers_json_document(ticker: &str) -> Option<String> {
     let json = fetch_cik_json_from_server().ok()?;
-    json.get(ticker).map(|ticker| ticker.cik_str.to_string())
+    json.get(ticker).map(|ticker| ticker.title.clone())
 }
 
 #[cfg(test)]
