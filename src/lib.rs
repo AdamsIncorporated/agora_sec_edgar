@@ -1,5 +1,6 @@
 mod api;
 use api::{CompanyTicker, CompanyTickers, fetch_cik_json_from_server, lookup_cik_from_ticker};
+mod base;
 
 pub fn get_cik_from_ticker(ticker: &str) -> Option<String> {
     Some(ticker.to_ascii_uppercase())
