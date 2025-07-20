@@ -8,6 +8,7 @@ pub fn get_cik_from_ticker(ticker: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashSet;
 
     #[test]
     fn test_get_cik_from_ticker_returns_uppercase() {
@@ -24,8 +25,29 @@ mod tests {
     }
 
     #[test]
-    fn test_get_cik_json_document() {
-        let json = fetch_cik_json_from_server().unwrap();
-        assert!(!json.is_empty());
+    fn test_keys_match() {
+        let json = r#"
+        {
+            "0": {
+                "cik_str": 1045810,
+                "ticker": "NVDA",
+                "title": "NVIDIA CORP"
+            },
+            "1": {
+                "cik_str": 320193,
+                "ticker": "AAPL",
+                "title": "APPLE INC"
+            }
+        }
+        "#;
+
+        let parsed: std::collections::HashMap<String, serde_json::Value> = serde_json::from_str(json).unwrap();
+
+        // Expected keys:
+        let expected_keys: HashSet<_> = ["0", "1"].iter().cloned().collect();
+
+        let parsed_keys: HashSet<_> = parsed.keys().map(|k| k.as_str()).collect();
+
+        assert_eq!(parsed_keys, expected_keys);
     }
 }

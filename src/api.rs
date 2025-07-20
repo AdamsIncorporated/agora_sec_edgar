@@ -34,7 +34,10 @@ pub fn fetch_cik_json_from_server() -> std::io::Result<String> {
             "No response body found",
         ))?;
 
-    Ok(response)
+    let parsed: HashMap<String, CompanyTicker> = serde_json::from_str(body)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+
+    Ok(parsed)
 }
 
 pub fn parse_company_tickers(
