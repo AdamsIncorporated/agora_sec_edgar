@@ -1,14 +1,16 @@
 mod api;
-mod lookup;
-use api::fetch_cik_json_from_server;
+use api::{fetch_cik_json_from_server, lookup_cik_from_ticker};
 
 pub fn get_cik_from_ticker(ticker: &str) -> Option<String> {
     Some(ticker.to_ascii_uppercase())
 }
 
-pub fn fetch_company_tickers_json_document(ticker: &str) -> Option<String> {
-    let json = fetch_cik_json_from_server().ok()?;
-    json.get(ticker).map(|ticker| ticker.title.clone())
+fn fetch_company_tickers_json_document(ticker: &str) -> Option<String> {
+    let company_tickers: api::CompanyTickers = fetch_cik_json_from_server().ok()?;
+    let Some(ticker) = lookup_cik_from_ticker(&company_tickers, ticker) else {
+        return None;
+    };
+    Some(ticker)
 }
 
 #[cfg(test)]

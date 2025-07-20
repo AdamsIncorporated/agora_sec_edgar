@@ -1,5 +1,4 @@
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 
@@ -10,15 +9,31 @@ pub struct CompanyTicker {
     pub title: String,
 }
 
-pub fn fetch_cik_json_from_server() -> std::io::Result<HashMap<String, CompanyTicker>> {
+#[derive(Debug, Deserialize)]
+pub struct CompanyTickers {
+    pub tickers: Vec<CompanyTicker>,
+}
+
+pub fn lookup_cik_from_ticker(tickers: &CompanyTickers, ticker: &str) -> Option<String> {
+    let ticker = 
+        tickers
+            .tickers
+            .iter()
+            .find(|entry| entry.ticker.eq_ignore_ascii_case(ticker))
+            .map(|entry| entry.cik_str.to_string());
+
+    ticker
+}
+
+pub fn fetch_cik_json_from_server() -> Result<CompanyTickers, std::io::Error> {
     let mut stream = TcpStream::connect("www.sec.gov:80")?;
 
     let request = "\
-    GET /files/company_tickers.json HTTP/1.1\r\n\
-    Host: www.sec.gov\r\n\
-    User-Agent: rust-client/1.0\r\n\
-    Connection: close\r\n\
-    Accept: application/json\r\n\
+        GET /files/company_tickers.json HTTP/1.1\r\n\
+        Host: www.sec.gov\r\n\
+        User-Agent: rust-client/1.0\r\n\
+        Connection: close\r\n\
+        Accept: application/json\r\n\
     \r\n";
 
     stream.write_all(request.as_bytes())?;
@@ -34,7 +49,7 @@ pub fn fetch_cik_json_from_server() -> std::io::Result<HashMap<String, CompanyTi
             "No response body found",
         ))?;
 
-    let parsed: HashMap<String, CompanyTicker> = serde_json::from_str(body)
+    let parsed: CompanyTickers = serde_json::from_str(body)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
     Ok(parsed)
