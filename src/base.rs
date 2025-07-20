@@ -27,8 +27,9 @@ impl EdgarParser {
     }
 
     pub fn create_from_ticker(&self, ticker: &str) -> Result<EdgarParser, EDGARParserError> {
+        // https://www.sec.gov/file/company-tickers
         let json_body =
-            crate::api::get_http_response_body("www.sec.gov", "/edgar/cik-tickers.json")
+            crate::api::get_http_response_body("www.sec.gov", "/files/company_tickers.json")
                 .map_err(EDGARParserError::HttpError)?;
 
         let tickers: CompanyDataList =
@@ -45,7 +46,7 @@ impl EdgarParser {
             .ok_or_else(|| EDGARParserError::NotFound(format!("Ticker {} not found", ticker)))
     }
 
-    pub fn parse(&self, data: &str) -> Result<(), EDGARParserError> {
+    pub fn parse(&self) -> Result<(), EDGARParserError> {
         Ok(())
     }
 }
