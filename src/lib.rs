@@ -1,5 +1,5 @@
 mod api;
-use api::{fetch_cik_json_from_server, lookup_cik_from_ticker};
+use api::{CompanyTicker, CompanyTickers, fetch_cik_json_from_server, lookup_cik_from_ticker};
 
 pub fn get_cik_from_ticker(ticker: &str) -> Option<String> {
     Some(ticker.to_ascii_uppercase())
@@ -58,5 +58,44 @@ mod tests {
         let parsed_keys: HashSet<_> = parsed.keys().map(|k| k.as_str()).collect();
 
         assert_eq!(parsed_keys, expected_keys);
+    }
+
+    #[test]
+    fn test_deserialize_company_tickers() {
+        let json_data = r#"
+        {
+            "tickers": [
+                {
+                    "cik_str": 123456,
+                    "ticker": "AAPL",
+                    "title": "Apple Inc."
+                },
+                {
+                    "cik_str": 789012,
+                    "ticker": "GOOGL",
+                    "title": "Alphabet Inc."
+                }
+            ]
+        }
+        "#;
+
+        let parsed: CompanyTickers = serde_json::from_str(json_data).expect("Failed to parse JSON");
+
+        let expected = CompanyTickers {
+            tickers: vec![
+                CompanyTicker {
+                    cik_str: 123456,
+                    ticker: "AAPL".to_string(),
+                    title: "Apple Inc.".to_string(),
+                },
+                CompanyTicker {
+                    cik_str: 789012,
+                    ticker: "GOOGL".to_string(),
+                    title: "Alphabet Inc.".to_string(),
+                },
+            ],
+        };
+
+        assert_eq!(parsed, expected);
     }
 }
