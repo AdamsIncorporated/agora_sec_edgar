@@ -14,6 +14,8 @@ pub struct EdgarParser {
     pub cik_str: u32,
     pub ticker: String,
     pub title: String,
+    pub submissions: Option<serde_json::Value>,
+    pub company_facts: Option<serde_json::Value>,
 
     #[serde(deserialize_with = "pad_cik")]
     pub leading_zero_cik: String,
@@ -72,6 +74,8 @@ impl EdgarParser {
                 ticker: c.ticker.clone(),
                 title: c.title.clone(),
                 leading_zero_cik: format!("{:010}", c.cik_str),
+                submissions: None,
+                company_facts: None,
             })
             .ok_or_else(|| EDGARParserError::NotFound(format!("Ticker {} not found", ticker)))
     }
@@ -80,7 +84,13 @@ impl EdgarParser {
     ///
     /// # Errors
     /// Returns `EDGARParserError::HttpError` or `EDGARParserError::JSONParseError` if the request fails.
-    pub fn fetch_company_facts(&self) -> Result<serde_json::Value, EDGARParserError> {
+    pub fn fetch_company_facts(&mut self) -> Result<serde_json::Value, EDGARParserError> {
+        if self.leading_zero_cik.is_empty() {
+            return Err(EDGARParserError::NotFound(
+                "Leading zero CIK is not set. Call create_from_ticker first.".to_string(),
+            ));
+        }
+
         let body_response = get_http_response_body(
             "data.sec.gov",
             &format!("/api/xbrl/companyfacts/CIK{}.json", self.leading_zero_cik),
@@ -90,22 +100,82 @@ impl EdgarParser {
         let json_response: serde_json::Value =
             serde_json::from_str(&body_response).map_err(EDGARParserError::JSONParseError)?;
 
+        // Store the company facts data in the struct
+        self.company_facts = Some(json_response.clone());
+
         Ok(json_response)
     }
 
-    /// Fetches the SEC Company Submissions JSON for the current company. This JSON data structure contains metadata such as current name, 
-    /// former name, and stock exchanges and ticker symbols of publicly-traded companies. The object’s property path contains at least one year’s of 
-    /// filing or to 1,000 (whichever is more) of the most recent filings in a compact columnar data array. If the entity has additional filings, files 
+    /// Fetches the SEC Company Submissions JSON for the current company. This JSON data structure contains metadata such as current name,
+    /// former name, and stock exchanges and ticker symbols of publicly-traded companies. The object’s property path contains at least one year’s of
+    /// filing or to 1,000 (whichever is more) of the most recent filings in a compact columnar data array. If the entity has additional filings, files
     /// will contain an array of additional JSON files and the date range for the filings each one contains.
     ///
     /// # Errors
     /// Returns `EDGARParserError::HttpError` or `EDGARParserError::JSONParseError` if the request fails.
-    pub fn fetch_submissions(&self) -> Result<serde_json::Value, EDGARParserError> {
+    pub fn fetch_submissions(&mut self) -> Result<serde_json::Value, EDGARParserError> {
+        if self.leading_zero_cik.is_empty() {
+            return Err(EDGARParserError::NotFound(
+                "Leading zero CIK is not set. Call create_from_ticker first.".to_string(),
+            ));
+        }
+
         let body_response = get_http_response_body(
             "data.sec.gov",
             &format!("/submissions/CIK{}.json", self.leading_zero_cik),
         )
         .map_err(EDGARParserError::HttpError)?;
+
+        let json_response: serde_json::Value =
+            serde_json::from_str(&body_response).map_err(EDGARParserError::JSONParseError)?;
+
+        // Store the submissions data in the struct
+        self.submissions = Some(json_response.clone());
+
+        Ok(json_response)
+    }
+
+    /// The xbrl/frames API aggregates one fact for each reporting entity that is
+    /// last filed and most closely fits the calendrical period requested. This API
+    /// supports annual, quarterly, and instantaneous data:
+    ///
+    ///     https://data.sec.gov/api/xbrl/frames/us-gaap/AccountsPayableCurrent/USD/CY2019Q1I.json
+    ///
+    /// Where the units of measure specified in the XBRL contain a numerator and
+    /// a denominator, these are separated by “-per-” such as “USD-per-shares”.
+    /// Note that the default unit in XBRL is “pure”.
+    ///
+    /// The period format is:
+    /// - CY#### for annual data (duration 365 days +/- 30 days),
+    /// - CY####Q# for quarterly data (duration 91 days +/- 30 days), and
+    /// - CY####Q#I for instantaneous data.
+    ///
+    /// Because company financial calendars can start and end on any month or day
+    /// and even change in length from quarter to quarter according to the day of
+    /// the week, the frame data is assembled by the dates that best align with a
+    /// calendar quarter or year.
+    ///
+    /// Data users should be mindful of different reporting start and end dates for
+    /// facts contained in a frame.
+    pub fn fetch_xbrl_frames(
+        &self,
+        fact: &str,
+        unit: &str,
+        period: &str,
+    ) -> Result<serde_json::Value, EDGARParserError> {
+        if self.leading_zero_cik.is_empty() {
+            return Err(EDGARParserError::NotFound(
+                "Leading zero CIK is not set. Call create_from_ticker first.".to_string(),
+            ));
+        }
+
+        let path = format!(
+            "/api/xbrl/frames/us-gaap/{}/{}/{}/{}.json",
+            fact, unit, period, self.leading_zero_cik
+        );
+
+        let body_response =
+            get_http_response_body("data.sec.gov", &path).map_err(EDGARParserError::HttpError)?;
 
         let json_response: serde_json::Value =
             serde_json::from_str(&body_response).map_err(EDGARParserError::JSONParseError)?;
@@ -172,6 +242,8 @@ mod tests {
             ticker: "".to_string(),
             title: "".to_string(),
             leading_zero_cik: "".to_string(),
+            submissions: None,
+            company_facts: None,
         };
 
         // You'd need to allow injecting `get_http_response_body` for a real unit test.
