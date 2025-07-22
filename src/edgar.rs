@@ -139,8 +139,6 @@ impl EdgarParser {
     /// last filed and most closely fits the calendrical period requested. This API
     /// supports annual, quarterly, and instantaneous data:
     ///
-    ///     https://data.sec.gov/api/xbrl/frames/us-gaap/AccountsPayableCurrent/USD/CY2019Q1I.json
-    ///
     /// Where the units of measure specified in the XBRL contain a numerator and
     /// a denominator, these are separated by “-per-” such as “USD-per-shares”.
     /// Note that the default unit in XBRL is “pure”.
