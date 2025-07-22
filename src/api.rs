@@ -39,3 +39,50 @@ pub fn get_http_response_body(domain: &str, path: &str) -> Result<String, std::i
     }
     Ok(body)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_http_response_body_example_com() {
+        let result = get_http_response_body("example.com", "/");
+        assert!(
+            result.is_ok(),
+            "Expected successful response, got error: {:?}",
+            result
+        );
+
+        let body = result.unwrap();
+        assert!(
+            body.contains("<html>") || body.contains("Example Domain"),
+            "Expected HTML content in the body"
+        );
+    }
+
+    #[test]
+    fn test_get_http_response_body_not_found() {
+        let result = get_http_response_body("example.com", "/nonexistentpage");
+        assert!(
+            result.is_ok(),
+            "Expected response, even for nonexistent page"
+        );
+
+        let body = result.unwrap();
+        // Typically, the server still returns a 404 page with content
+        assert!(
+            !body.is_empty(),
+            "Expected non-empty response even for 404 page"
+        );
+    }
+
+    #[test]
+    fn test_get_http_response_body_invalid_domain() {
+        let result = get_http_response_body("nonexistent.invalid", "/");
+        assert!(
+            result.is_err(),
+            "Expected an error for an invalid domain, got: {:?}",
+            result
+        );
+    }
+}
