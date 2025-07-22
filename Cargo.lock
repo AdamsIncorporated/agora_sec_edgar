@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "agora-sec-edgar"
+name = "agora_sec_edgar"
 version = "0.1.0"
 dependencies = [
  "serde",
