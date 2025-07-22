@@ -92,6 +92,26 @@ impl EdgarParser {
 
         Ok(json_response)
     }
+
+    /// Fetches the SEC Company Submissions JSON for the current company. This JSON data structure contains metadata such as current name, 
+    /// former name, and stock exchanges and ticker symbols of publicly-traded companies. The object’s property path contains at least one year’s of 
+    /// filing or to 1,000 (whichever is more) of the most recent filings in a compact columnar data array. If the entity has additional filings, files 
+    /// will contain an array of additional JSON files and the date range for the filings each one contains.
+    ///
+    /// # Errors
+    /// Returns `EDGARParserError::HttpError` or `EDGARParserError::JSONParseError` if the request fails.
+    pub fn fetch_submissions(&self) -> Result<serde_json::Value, EDGARParserError> {
+        let body_response = get_http_response_body(
+            "data.sec.gov",
+            &format!("/submissions/CIK{}.json", self.leading_zero_cik),
+        )
+        .map_err(EDGARParserError::HttpError)?;
+
+        let json_response: serde_json::Value =
+            serde_json::from_str(&body_response).map_err(EDGARParserError::JSONParseError)?;
+
+        Ok(json_response)
+    }
 }
 
 #[cfg(test)]
