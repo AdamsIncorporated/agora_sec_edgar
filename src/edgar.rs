@@ -7,6 +7,16 @@ pub struct EdgarParser {
     pub cik_str: u32,
     pub ticker: String,
     pub title: String,
+    #[serde(deserialize_with = "pad_cik")]
+    pub leading_zero_cik: String,
+}
+
+fn pad_cik<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let cik: u32 = Deserialize::deserialize(deserializer)?;
+    Ok(format!("{:0>10}", cik))
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -28,7 +38,7 @@ impl EdgarParser {
     }
 
     pub fn create_from_ticker(&self, ticker: &str) -> Result<EdgarParser, EDGARParserError> {
-        // https://www.sec.gov/file/company-tickers
+        // example: https://www.sec.gov/file/company-tickers
         let json_body = get_http_response_body("www.sec.gov", "/files/company_tickers.json")
             .map_err(EDGARParserError::HttpError)?;
 
@@ -42,6 +52,7 @@ impl EdgarParser {
                 cik_str: c.cik_str,
                 ticker: c.ticker.clone(),
                 title: c.title.clone(),
+                leading_zero_cik: format!("{:010}", c.cik_str),
             })
             .ok_or_else(|| EDGARParserError::NotFound(format!("Ticker {} not found", ticker)))
     }
@@ -50,7 +61,7 @@ impl EdgarParser {
         // example: https://data.sec.gov/api/xbrl/companyfacts/CIK0001045810.json
         let body_response = get_http_response_body(
             "data.sec.gov",
-            &format!("/api/xbrl/companyfacts/CIK{}.json", self.cik_str),
+            &format!("/api/xbrl/companyfacts/CIK{}.json", self.leading_zero_cik),
         )
         .map_err(|e| EDGARParserError::HttpError(e))?;
         let json_response: serde_json::Value =
