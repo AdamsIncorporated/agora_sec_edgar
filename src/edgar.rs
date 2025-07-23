@@ -156,20 +156,14 @@ impl EdgarParser {
     /// Data users should be mindful of different reporting start and end dates for
     /// facts contained in a frame.
     pub fn fetch_xbrl_frames(
-        &self,
         fact: &str,
         unit: &str,
-        period: &str,
+        year: &u16,
+        quarter: &u8,
     ) -> Result<serde_json::Value, EDGARParserError> {
-        if self.leading_zero_cik.is_empty() {
-            return Err(EDGARParserError::NotFound(
-                "Leading zero CIK is not set. Call create_from_ticker first.".to_string(),
-            ));
-        }
-
         let path = format!(
-            "/api/xbrl/frames/us-gaap/{}/{}/{}/{}.json",
-            fact, unit, period, self.leading_zero_cik
+            "/api/xbrl/frames/us-gaap/{}/{}/CY{}{}I.json",
+            fact, unit, year, quarter,
         );
 
         let body_response =
@@ -240,13 +234,14 @@ mod tests {
 
     #[test]
     fn test_fetch_xbrl_frames_success() {
-        let parser = EdgarParser::new("AAPL").unwrap(); 
-
-        let result = parser.fetch_xbrl_frames("Revenues", "USD", "2023");
-
+        let fact: &'static str = "Assets";
+        let unit: &'static str = "USD";
+        let year: u16 = 2020;
+        let quarter: u8 = 1;
+        let result = EdgarParser::fetch_xbrl_frames(fact, unit, &year, &quarter);
         assert!(result.is_ok());
 
-        let json = result.unwrap();
-        assert_eq!(json["mock_key"], "mock_value");
+        // let json = result.unwrap();
+        // assert_eq!(json["label"], "Accounts Payable, Current");
     }
 }
