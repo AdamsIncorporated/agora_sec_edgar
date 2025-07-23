@@ -52,13 +52,13 @@ impl EdgarParser {
     ///
     /// # Errors
     /// Returns `EDGARParserError::HttpError`, `EDGARParserError::JSONParseError`, or `EDGARParserError::NotFound`
-    pub fn new(self, ticker: &str) -> Result<Self, EDGARParserError> {
-        let edgar_parser = self.create_from_ticker(ticker)?;
+    pub fn new(ticker: &str) -> Result<Self, EDGARParserError> {
+        let edgar_parser = Self::create_from_ticker(ticker)?;
         Ok(edgar_parser)
     }
 
     /// Internal helper to create an `EdgarParser` by searching the ticker list.
-    pub fn create_from_ticker(&self, ticker: &str) -> Result<EdgarParser, EDGARParserError> {
+    pub fn create_from_ticker(ticker: &str) -> Result<EdgarParser, EDGARParserError> {
         let json_body = get_http_response_body("www.sec.gov", "/files/company_tickers.json")
             .map_err(EDGARParserError::HttpError)?;
 
@@ -235,17 +235,18 @@ mod tests {
     // Example test using mock (requires dependency injection refactor to be fully testable)
     #[test]
     fn test_create_from_ticker_mocked() {
-        let dummy = EdgarParser {
-            cik_str: 0,
-            ticker: "".to_string(),
-            title: "".to_string(),
-            leading_zero_cik: "".to_string(),
-            submissions: None,
-            company_facts: None,
-        };
+        assert!(EdgarParser::create_from_ticker("AAPL").is_err());
+    }
 
-        // You'd need to allow injecting `get_http_response_body` for a real unit test.
-        // This is more of a design suggestion reminder than executable code.
-        assert!(dummy.create_from_ticker("AAPL").is_err());
+    #[test]
+    fn test_fetch_xbrl_frames_success() {
+        let parser = EdgarParser::new("AAPL").unwrap(); 
+
+        let result = parser.fetch_xbrl_frames("Revenues", "USD", "2023");
+
+        assert!(result.is_ok());
+
+        let json = result.unwrap();
+        assert_eq!(json["mock_key"], "mock_value");
     }
 }
