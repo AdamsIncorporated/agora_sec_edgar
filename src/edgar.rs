@@ -52,15 +52,16 @@ impl EdgarParser {
     ///
     /// # Errors
     /// Returns `EDGARParserError::HttpError`, `EDGARParserError::JSONParseError`, or `EDGARParserError::NotFound`
-    pub fn new(ticker: &str) -> Result<Self, EDGARParserError> {
-        let edgar_parser = Self::create_from_ticker(ticker)?;
+    pub async fn new(ticker: &str) -> Result<Self, EDGARParserError> {
+        let edgar_parser = Self::create_from_ticker(ticker).await?;
         Ok(edgar_parser)
     }
 
     /// Internal helper to create an `EdgarParser` by searching the ticker list.
-    pub fn create_from_ticker(ticker: &str) -> Result<EdgarParser, EDGARParserError> {
-        let json_body = get_http_response_body("www.sec.gov", "/files/company_tickers.json")
-            .map_err(EDGARParserError::HttpError)?;
+    pub async fn create_from_ticker(ticker: &str) -> Result<EdgarParser, EDGARParserError> {
+        let json_body = get_http_response_body("www.sec.gov/files/company_tickers.json")
+            .await
+            .map_err(|op: Box<dyn std::error::Error>| EDGARParserError::HttpError(op))?;
 
         let tickers: CompanyDataList =
             serde_json::from_str(&json_body).map_err(EDGARParserError::JSONParseError)?;
@@ -84,18 +85,19 @@ impl EdgarParser {
     ///
     /// # Errors
     /// Returns `EDGARParserError::HttpError` or `EDGARParserError::JSONParseError` if the request fails.
-    pub fn fetch_company_facts(&mut self) -> Result<serde_json::Value, EDGARParserError> {
+    pub async fn fetch_company_facts(&mut self) -> Result<serde_json::Value, EDGARParserError> {
         if self.leading_zero_cik.is_empty() {
             return Err(EDGARParserError::NotFound(
                 "Leading zero CIK is not set. Call create_from_ticker first.".to_string(),
             ));
         }
 
-        let body_response = get_http_response_body(
-            "data.sec.gov",
-            &format!("/api/xbrl/companyfacts/CIK{}.json", self.leading_zero_cik),
-        )
-        .map_err(EDGARParserError::HttpError)?;
+        let body_response = get_http_response_body(&format!(
+            "data.sec.gov/api/xbrl/companyfacts/CIK{}.json",
+            self.leading_zero_cik
+        ))
+        .await
+        .map_err(|op: Box<dyn std::error::Error>| EDGARParserError::HttpError(op))?;
 
         let json_response: serde_json::Value =
             serde_json::from_str(&body_response).map_err(EDGARParserError::JSONParseError)?;
@@ -113,18 +115,19 @@ impl EdgarParser {
     ///
     /// # Errors
     /// Returns `EDGARParserError::HttpError` or `EDGARParserError::JSONParseError` if the request fails.
-    pub fn fetch_submissions(&mut self) -> Result<serde_json::Value, EDGARParserError> {
+    pub async fn fetch_submissions(&mut self) -> Result<serde_json::Value, EDGARParserError> {
         if self.leading_zero_cik.is_empty() {
             return Err(EDGARParserError::NotFound(
                 "Leading zero CIK is not set. Call create_from_ticker first.".to_string(),
             ));
         }
 
-        let body_response = get_http_response_body(
-            "data.sec.gov",
-            &format!("/submissions/CIK{}.json", self.leading_zero_cik),
-        )
-        .map_err(EDGARParserError::HttpError)?;
+        let body_response = get_http_response_body(&format!(
+            "data.sec.gov/submissions/CIK{}.json",
+            self.leading_zero_cik
+        ))
+        .await
+        .map_err(|op: Box<dyn std::error::Error>| EDGARParserError::HttpError(op))?;
 
         let json_response: serde_json::Value =
             serde_json::from_str(&body_response).map_err(EDGARParserError::JSONParseError)?;
@@ -155,19 +158,20 @@ impl EdgarParser {
     ///
     /// Data users should be mindful of different reporting start and end dates for
     /// facts contained in a frame.
-    pub fn fetch_xbrl_frames(
+    pub async fn fetch_xbrl_frames(
         fact: &str,
         unit: &str,
         year: &u16,
         quarter: &u8,
     ) -> Result<serde_json::Value, EDGARParserError> {
         let path = format!(
-            "/api/xbrl/frames/us-gaap/{}/{}/CY{}{}I.json",
+            "data.sec.gov/api/xbrl/frames/us-gaap/{}/{}/CY{}{}I.json",
             fact, unit, year, quarter,
         );
 
-        let body_response =
-            get_http_response_body("data.sec.gov", &path).map_err(EDGARParserError::HttpError)?;
+        let body_response = get_http_response_body(&path)
+            .await
+            .map_err(|op: Box<dyn std::error::Error>| EDGARParserError::HttpError(op))?;
 
         let json_response: serde_json::Value =
             serde_json::from_str(&body_response).map_err(EDGARParserError::JSONParseError)?;
@@ -227,19 +231,19 @@ mod tests {
     }
 
     // Example test using mock (requires dependency injection refactor to be fully testable)
-    #[test]
-    fn test_create_from_ticker_mocked() {
-        assert!(EdgarParser::create_from_ticker("AAPL").is_err());
+    #[tokio::test]
+    async fn test_create_from_ticker_mocked() {
+        assert!(EdgarParser::create_from_ticker("AAPL").await.is_err());
     }
 
-    #[test]
-    fn test_fetch_xbrl_frames_success() {
+    #[tokio::test]
+    async fn test_fetch_xbrl_frames_success() {
         let fact: &'static str = "Assets";
         let unit: &'static str = "USD";
         let year: u16 = 2020;
         let quarter: u8 = 1;
         let result = EdgarParser::fetch_xbrl_frames(fact, unit, &year, &quarter);
-        assert!(result.is_ok());
+        assert!(result.await.is_ok());
 
         // let json = result.unwrap();
         // assert_eq!(json["label"], "Accounts Payable, Current");

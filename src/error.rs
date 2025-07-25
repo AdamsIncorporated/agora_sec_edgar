@@ -3,7 +3,7 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum EDGARParserError {
     #[error("HTTP request failed: {0}")]
-    HttpError(#[from] std::io::Error),
+    HttpError(#[from] Box<dyn std::error::Error>),
 
     #[error("Failed to parse JSON: {0}")]
     JSONParseError(#[from] serde_json::Error),
