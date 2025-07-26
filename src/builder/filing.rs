@@ -484,49 +484,50 @@ mod tests {
 
     #[test]
     fn test_from_str_valid() {
-        let ft = FilingTypeOption::from_str("10-K").unwrap();
+        let ft: FilingTypeOption = FilingTypeOption::from_str("10-K").unwrap();
         assert_eq!(ft, FilingTypeOption::_10K);
     }
 
     #[test]
     fn test_from_str_case_insensitive() {
-        let ft = FilingTypeOption::from_str("10-k").unwrap();
+        let ft: FilingTypeOption = FilingTypeOption::from_str("10-k").unwrap();
         assert_eq!(ft, FilingTypeOption::_10K);
     }
 
     #[test]
     fn test_from_str_invalid() {
-        let result = FilingTypeOption::from_str("INVALID");
+        let result: Result<FilingTypeOption, EDGARParserError> =
+            FilingTypeOption::from_str("INVALID");
         assert!(result.is_err());
     }
 
     #[test]
     fn test_display_trait() {
-        let ft = FilingTypeOption::_10K;
+        let ft: FilingTypeOption = FilingTypeOption::_10K;
         assert_eq!(ft.to_string(), "10-K");
     }
 
     #[test]
     fn test_filing_from_str() {
-        let ft = filing_from_str("S-1").unwrap();
+        let ft: FilingTypeOption = filing_from_str("S-1").unwrap();
         assert_eq!(ft, FilingTypeOption::S1);
     }
 
     #[test]
     fn test_to_string_wrapper() {
-        let s = to_string(FilingTypeOption::S1);
+        let s: String = to_string(FilingTypeOption::S1);
         assert_eq!(s, "S-1");
     }
 
     #[test]
     fn test_validate_filing_type_string_valid() {
-        let s = validate_filing_type_string("S-1").unwrap();
+        let s: String = validate_filing_type_string("S-1").unwrap();
         assert_eq!(s, "S-1");
     }
 
     #[test]
     fn test_validate_filing_type_string_invalid() {
-        let s = validate_filing_type_string("WRONG-FORM");
+        let s: Result<String, EDGARParserError> = validate_filing_type_string("WRONG-FORM");
         assert!(s.is_err());
     }
 }
