@@ -152,6 +152,9 @@ pub enum FilingTypeOption {
 }
 
 // Static map for string -> enum conversion
+// Adapted from: https://github.com/tieje/rs_sec_edgar
+// Original Author: Thomas James Francis
+// License: MIT
 static FILING_TYPE_MAP: Map<&'static str, FilingTypeOption> = phf_map! {
         "1-A" => FilingTypeOption::_1A ,
         "1-E" => FilingTypeOption::_1E ,
