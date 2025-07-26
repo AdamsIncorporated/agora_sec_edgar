@@ -19,4 +19,7 @@ pub enum EDGARParserError {
 
     #[error("EDGAR Filing not found.")]
     FilingTypeNotFound(),
+    
+    #[error("EDGAR Owner Type not found.")]
+    OwnerTypeNotFound(),
 }

@@ -38,7 +38,7 @@ impl FromStr for OwnerOption {
         OWNER_TYPE_MAP
             .get(&s.to_uppercase() as &str)
             .copied()
-            .ok_or(EDGARParserError::ownerTypeNotFound())
+            .ok_or(EDGARParserError::OwnerTypeNotFound())
     }
 }
 
