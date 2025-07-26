@@ -16,4 +16,7 @@ pub enum EDGARParserError {
 
     #[error("Received invalid response: {0}")]
     InvalidResponse(String),
+
+    #[error("EDGAR Filing not found.")]
+    FilingTypeNotFound(),
 }
