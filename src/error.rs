@@ -1,4 +1,5 @@
 use thiserror::Error;
+use url::ParseError;
 
 #[derive(Debug, Error)]
 pub enum EDGARParserError {
@@ -17,9 +18,18 @@ pub enum EDGARParserError {
     #[error("Received invalid response: {0}")]
     InvalidResponse(String),
 
+    #[error("URL Parsing error.")]
+    UrlParseError(ParseError),
+
     #[error("EDGAR Filing not found.")]
     FilingTypeNotFound(),
     
     #[error("EDGAR Owner Type not found.")]
     OwnerTypeNotFound(),
+}
+
+impl From<ParseError> for EDGARParserError {
+    fn from(err: ParseError) -> Self {
+        EDGARParserError::UrlParseError(err)
+    }
 }

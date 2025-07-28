@@ -19,10 +19,10 @@ impl EdgarQueryBuilder {
         Self {
             base_url: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&".to_string(),
             filing_type: Default::default(),
-            dateb,
-            owner,
-            count,
-            search_text,
+            dateb: Default::default(),
+            owner: "include".to_string(),
+            count: "10".to_string(),
+            search_text: Default::default(),
             edgar_parser,
         }
     }
