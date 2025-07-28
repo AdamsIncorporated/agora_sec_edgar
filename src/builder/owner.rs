@@ -36,7 +36,7 @@ impl FromStr for OwnerOption {
 }
 
 impl Default for OwnerOption {
-    fn default() -> Se {
+    fn default() -> Self {
         OwnerOption::INCLUDE
     }
 }

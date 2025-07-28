@@ -8,10 +8,8 @@ use url::Url;
 pub struct EdgarQueryBuilder {
     pub edgar_parser: EdgarParser,
     pub filing_type: FilingTypeOption,
-    filing_type_string: String,
     pub dateb: String,
     pub owner: OwnerOption,
-    owner_string: String
     pub base_url: String,
     pub count: String,
     pub search_text: String,
@@ -31,13 +29,15 @@ impl EdgarQueryBuilder {
     }
 
     pub fn build(&self) -> Result<Url, EDGARParserError> {
+        let filing_type_string = self.filing_type.to_string();
+        let owner_string = self.owner.to_string();
         let url = format!(
-            "{base}CIK={cik}&type={filing_type}&dateb={dateb}&owner={owner}&count={count}&search_text={search_text}&output=atom",
+            "{base}CIK={cik}&type={filing_type_string}&dateb={dateb}&owner={owner_string}&count={count}&search_text={search_text}&output=atom",
             base = self.base_url,
             cik = self.edgar_parser.cik_str,
-            filing_type = self.filing_type,
+            filing_type_string = filing_type_string,
             dateb = self.dateb,
-            owner = self.owner,
+            owner_string = owner_string,
             count = self.count,
             search_text = self.search_text
         );
