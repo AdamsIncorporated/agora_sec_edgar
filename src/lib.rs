@@ -3,3 +3,4 @@ mod edgar;
 mod error;
 mod builder;
 pub use edgar::EdgarParser;
+pub use builder::EdgarQueryBuilder;

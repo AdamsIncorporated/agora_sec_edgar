@@ -3,21 +3,14 @@ use phf::{Map, phf_map};
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq)]
-pub enum OwnerOptions {
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[allow(missing_docs)]
+pub enum OwnerOption {
     /// "include" means include all documents regardless of the source.
     INCLUDE,
     /// "exclude" means exclude documents related to the company's director or officer ownership.
     EXCLUDE,
     /// "only" means only show documents related to the company's director or officer ownership.
-    ONLY,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-#[allow(missing_docs)]
-pub enum OwnerOption {
-    INCLUDE,
-    EXCLUDE,
     ONLY,
 }
 
@@ -39,6 +32,12 @@ impl FromStr for OwnerOption {
             .get(&s.to_uppercase() as &str)
             .copied()
             .ok_or(EDGARParserError::OwnerTypeNotFound())
+    }
+}
+
+impl Default for OwnerOption {
+    fn default() -> Se {
+        OwnerOption::INCLUDE
     }
 }
 

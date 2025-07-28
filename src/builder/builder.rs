@@ -1,17 +1,20 @@
 use crate::builder::filing::FilingTypeOption;
+use crate::builder::owner::OwnerOption;
 use crate::edgar::EdgarParser;
 use crate::error::EDGARParserError;
 use url::Url;
 
 #[derive(Debug, PartialEq)]
-struct EdgarQueryBuilder {
-    base_url: String,
-    filing_type: FilingTypeOption,
-    dateb: String,
-    owner: String,
-    count: String,
-    search_text: String,
-    edgar_parser: EdgarParser,
+pub struct EdgarQueryBuilder {
+    pub edgar_parser: EdgarParser,
+    pub filing_type: FilingTypeOption,
+    filing_type_string: String,
+    pub dateb: String,
+    pub owner: OwnerOption,
+    owner_string: String
+    pub base_url: String,
+    pub count: String,
+    pub search_text: String,
 }
 
 impl EdgarQueryBuilder {
@@ -20,7 +23,7 @@ impl EdgarQueryBuilder {
             base_url: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&".to_string(),
             filing_type: Default::default(),
             dateb: Default::default(),
-            owner: "include".to_string(),
+            owner: Default::default(),
             count: "10".to_string(),
             search_text: Default::default(),
             edgar_parser,
