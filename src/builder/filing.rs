@@ -5,8 +5,7 @@ use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 #[allow(missing_docs)]
-pub enum FilingTypeOption 
-{
+pub enum FilingTypeOption {
     _1A,
     _1E,
     _1K,
@@ -310,6 +309,12 @@ impl FromStr for FilingTypeOption {
             .get(&s.to_uppercase() as &str)
             .copied()
             .ok_or(EDGARParserError::FilingTypeNotFound())
+    }
+}
+
+impl Default for FilingTypeOption {
+    fn default() -> Self {
+        FilingTypeOption::_1U
     }
 }
 

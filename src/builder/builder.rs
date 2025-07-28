@@ -18,22 +18,27 @@ impl EdgarQueryBuilder {
     pub fn new(edgar_parser: EdgarParser) -> Self {
         Self {
             base_url: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&".to_string(),
+            filing_type: Default::default(),
+            dateb,
+            owner,
+            count,
+            search_text,
             edgar_parser,
         }
     }
 
-    pub fn build(&self) -> Result<Url, EDGARError> {
+    pub fn build(&self) -> Result<Url, EDGARParserError> {
         let url = format!(
             "{base}CIK={cik}&type={filing_type}&dateb={dateb}&owner={owner}&count={count}&search_text={search_text}&output=atom",
             base = self.base_url,
             cik = self.edgar_parser.cik_str,
-            filing_type = self.edgar_parser,
-            dateb = self.edgar_parser,
-            owner = self.edgar_parser,
+            filing_type = self.filing_type,
+            dateb = self.dateb,
+            owner = self.owner,
             count = self.count,
             search_text = self.search_text
         );
-        let query = Url::parse(&url_res)?;
+        let query = Url::parse(&url)?;
         Ok(query)
     }
 }
