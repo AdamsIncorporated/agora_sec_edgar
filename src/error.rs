@@ -23,7 +23,10 @@ pub enum EDGARParserError {
 
     #[error("EDGAR Filing not found.")]
     FilingTypeNotFound(),
-    
+
+    #[error("Invalid date format supplied {0}, it should be yyyymmdd.")]
+    InvalidDateFormat(String),
+
     #[error("EDGAR Owner Type not found.")]
     OwnerTypeNotFound(),
 }
