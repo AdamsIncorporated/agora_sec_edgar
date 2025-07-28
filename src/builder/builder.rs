@@ -1,4 +1,3 @@
-// Import required modules and types from the project and external crates.
 use crate::builder::filing::FilingTypeOption;
 use crate::builder::owner::OwnerOption;
 use crate::edgar::EdgarParser;
