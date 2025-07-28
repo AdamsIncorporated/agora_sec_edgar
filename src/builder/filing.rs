@@ -5,7 +5,8 @@ use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 #[allow(missing_docs)]
-pub enum FilingTypeOption {
+pub enum FilingTypeOption 
+{
     _1A,
     _1E,
     _1K,

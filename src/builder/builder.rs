@@ -1,8 +1,39 @@
-use serde::Deserialize;
+use crate::builder::filing::FilingTypeOption;
 use crate::edgar::EdgarParser;
 use crate::error::EDGARParserError;
+use url::Url;
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, PartialEq)]
 struct EdgarQueryBuilder {
-    edgar_parser: EdgarParser,  
+    base_url: String,
+    filing_type: FilingTypeOption,
+    dateb: String,
+    owner: String,
+    count: String,
+    search_text: String,
+    edgar_parser: EdgarParser,
+}
+
+impl EdgarQueryBuilder {
+    pub fn new(edgar_parser: EdgarParser) -> Self {
+        Self {
+            base_url: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&".to_string(),
+            edgar_parser,
+        }
+    }
+
+    pub fn build(&self) -> Result<Url, EDGARError> {
+        let url = format!(
+            "{base}CIK={cik}&type={filing_type}&dateb={dateb}&owner={owner}&count={count}&search_text={search_text}&output=atom",
+            base = self.base_url,
+            cik = self.edgar_parser.cik_str,
+            filing_type = self.edgar_parser,
+            dateb = self.edgar_parser,
+            owner = self.edgar_parser,
+            count = self.count,
+            search_text = self.search_text
+        );
+        let query = Url::parse(&url_res)?;
+        Ok(query)
+    }
 }
