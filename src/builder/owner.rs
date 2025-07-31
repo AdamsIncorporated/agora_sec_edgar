@@ -52,15 +52,17 @@ impl fmt::Display for OwnerOption {
     }
 }
 
-// Re-exported helpers for your API
+#[allow(unused)]
 pub fn owner_from_str(s: &str) -> Result<OwnerOption, EDGARParserError> {
     OwnerOption::from_str(s)
 }
 
+#[allow(unused)]
 pub fn to_string(owner_type: OwnerOption) -> String {
     owner_type.to_string()
 }
 
+#[allow(unused)]
 pub fn validate_owner_type_string(s: &str) -> Result<String, EDGARParserError> {
     let ft = owner_from_str(s)?;
     Ok(ft.to_string())

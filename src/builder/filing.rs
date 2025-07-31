@@ -469,15 +469,17 @@ impl fmt::Display for FilingTypeOption {
     }
 }
 
-// Re-exported helpers for your API
+#[allow(unused)]
 pub fn filing_from_str(s: &str) -> Result<FilingTypeOption, EDGARParserError> {
     FilingTypeOption::from_str(s)
 }
 
+#[allow(unused)]
 pub fn to_string(filing_type: FilingTypeOption) -> String {
     filing_type.to_string()
 }
 
+#[allow(unused)]
 pub fn validate_filing_type_string(s: &str) -> Result<String, EDGARParserError> {
     let ft = filing_from_str(s)?;
     Ok(ft.to_string())

@@ -41,7 +41,7 @@ impl EdgarQueryBuilder {
             count: "10".to_string(),
             search_text: Default::default(),
             edgar_parser,
-        }
+        } 
     }
 
     /// Builds and returns a `Url` to query the EDGAR system based on the builder's state.
