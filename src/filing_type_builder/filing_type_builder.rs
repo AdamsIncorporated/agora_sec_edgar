@@ -94,3 +94,117 @@ impl EdgarFilingQueryBuilder {
         Ok(body)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::edgar::EdgarParser;
+    use crate::error::EDGARParserError;
+    use crate::filing_type_builder::filing::FilingTypeOption;
+    use crate::filing_type_builder::owner::OwnerOption;
+
+    async fn sample_parser() -> Result<EdgarParser, EDGARParserError> {
+        Ok(EdgarParser::create_from_ticker("AAPL").await?)
+    }
+
+    #[tokio::test]
+    async fn test_new_builder_defaults() {
+        let parser = sample_parser().await.unwrap();
+        let builder = EdgarFilingQueryBuilder::new(parser);
+        let cik_raw_num = builder.edgar_parser.cik_str;
+
+        assert_eq!(cik_raw_num, 320193);
+        assert_eq!(
+            builder.base_url,
+            "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&"
+        );
+        assert_eq!(builder.count, "10");
+        assert_eq!(builder.dateb, "");
+        assert_eq!(builder.search_text, "");
+    }
+
+    #[test]
+    fn test_set_and_validate_dateb_valid() {
+        let date = "20240101".to_string();
+        let result = EdgarFilingQueryBuilder::set_and_validate_dateb(date.clone());
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), date);
+    }
+
+    #[test]
+    fn test_set_and_validate_dateb_invalid_format() {
+        let bad_date = "2024011".to_string(); // only 7 digits
+        let err = EdgarFilingQueryBuilder::set_and_validate_dateb(bad_date.clone()).unwrap_err();
+        assert!(matches!(err, EDGARParserError::InvalidDateFormat(d) if d == bad_date));
+    }
+
+    #[test]
+    fn test_set_and_validate_dateb_invalid_date() {
+        let bad_date = "20241301".to_string(); // month 13
+        let err = EdgarFilingQueryBuilder::set_and_validate_dateb(bad_date.clone()).unwrap_err();
+        assert!(matches!(err, EDGARParserError::InvalidDateFormat(d) if d == bad_date));
+    }
+
+    #[tokio::test]
+    async fn test_build_url_success() {
+        let parser = sample_parser().await.unwrap();
+        let mut builder = EdgarFilingQueryBuilder::new(parser);
+        builder.filing_type = FilingTypeOption::_10K;
+        builder.owner = OwnerOption::INCLUDE;
+        builder.dateb = "20231231".to_string();
+        builder.count = "25".to_string();
+        builder.search_text = "apple".to_string();
+
+        let url = builder.build().unwrap();
+        let url_str = url.as_str();
+
+        assert!(url_str.contains("CIK=0000320193"));
+        assert!(url_str.contains("type=10-K"));
+        assert!(url_str.contains("dateb=20231231"));
+        assert!(url_str.contains("owner=include"));
+        assert!(url_str.contains("count=25"));
+        assert!(url_str.contains("search_text=apple"));
+    }
+
+    #[tokio::test]
+    async fn test_build_url_invalid_date() {
+        let parser = sample_parser().await.unwrap();
+        let mut builder = EdgarFilingQueryBuilder::new(parser);
+        builder.dateb = "20231301".to_string(); // invalid month
+
+        let result = builder.build();
+        assert!(matches!(
+            result,
+            Err(EDGARParserError::InvalidDateFormat(_))
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_fetch_filing_type_invalid_url() {
+        let parser = sample_parser().await.unwrap();
+        let mut builder = EdgarFilingQueryBuilder::new(parser);
+        builder.dateb = "invalid".to_string(); // Will cause build() to fail
+
+        let result = builder.fetch_filing_type().await;
+        assert!(matches!(
+            result,
+            Err(EDGARParserError::InvalidDateFormat(_))
+        ));
+    }
+
+    // You can optionally test real fetches with `#[ignore]`
+    // Run with: `cargo test -- --ignored`
+    #[tokio::test]
+    #[ignore]
+    async fn test_fetch_filing_type_real() {
+        let parser = sample_parser().await.unwrap();
+        let mut builder = EdgarFilingQueryBuilder::new(parser);
+        builder.dateb = "20231231".to_string();
+        builder.filing_type = FilingTypeOption::_10K;
+        builder.owner = OwnerOption::INCLUDE;
+
+        let result = builder.fetch_filing_type().await;
+        assert!(result.is_ok());
+        assert!(result.unwrap().contains("entry")); // Atom XML entries
+    }
+}
