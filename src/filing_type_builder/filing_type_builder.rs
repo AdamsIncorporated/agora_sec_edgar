@@ -1,13 +1,14 @@
-use crate::builder::filing::FilingTypeOption;
-use crate::builder::owner::OwnerOption;
+use crate::api::fetch_http_body_over_tcp;
 use crate::edgar::EdgarParser;
 use crate::error::EDGARParserError;
+use crate::filing_type_builder::filing::FilingTypeOption;
+use crate::filing_type_builder::owner::OwnerOption;
 use chrono::NaiveDate;
 use url::Url;
 
-/// `EdgarQueryBuilder` is a builder struct to construct a URL query for the SEC's EDGAR system.
+/// `EdgarFilingQueryBuilder` is a builder struct to construct a URL query for the SEC's EDGAR system.
 #[derive(Debug, PartialEq)]
-pub struct EdgarQueryBuilder {
+pub struct EdgarFilingQueryBuilder {
     // Instance of EdgarParser that provides the CIK and potentially other metadata.
     pub edgar_parser: EdgarParser,
 
@@ -30,8 +31,8 @@ pub struct EdgarQueryBuilder {
     pub search_text: String,
 }
 
-impl EdgarQueryBuilder {
-    /// Constructs a new instance of `EdgarQueryBuilder` with default values and a provided `EdgarParser`.
+impl EdgarFilingQueryBuilder {
+    /// Constructs a new instance of `EdgarFilingQueryBuilder` with default values and a provided `EdgarParser`.
     pub fn new(edgar_parser: EdgarParser) -> Self {
         Self {
             base_url: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&".to_string(),
@@ -41,7 +42,7 @@ impl EdgarQueryBuilder {
             count: "10".to_string(),
             search_text: Default::default(),
             edgar_parser,
-        } 
+        }
     }
 
     /// Builds and returns a `Url` to query the EDGAR system based on the builder's state.
@@ -84,5 +85,12 @@ impl EdgarQueryBuilder {
                 Err(_) => Err(EDGARParserError::InvalidDateFormat(dateb)),
             }
         }
+    }
+
+    pub async fn fetch_filing_type(&self) -> Result<String, EDGARParserError> {
+        let url = self.build()?;
+        let url_string = url.to_string();
+        let body = fetch_http_body_over_tcp(&url_string).await?;
+        Ok(body)
     }
 }
