@@ -6,11 +6,11 @@ use std::str::FromStr;
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 #[allow(missing_docs)]
 pub enum OwnerOption {
-    /// "include" means include all documents regardless of the source.
+    /// "INCLUDE" means INCLUDE all documents regardless of the source.
     INCLUDE,
-    /// "exclude" means exclude documents related to the company's director or officer ownership.
+    /// "EXCLUDE" means EXCLUDE documents related to the company's director or officer ownership.
     EXCLUDE,
-    /// "only" means only show documents related to the company's director or officer ownership.
+    /// "ONLY" means ONLY show documents related to the company's director or officer ownership.
     ONLY,
 }
 
@@ -19,9 +19,9 @@ pub enum OwnerOption {
 // Original Author: Thomas James Francis
 // License: MIT
 static OWNER_TYPE_MAP: Map<&'static str, OwnerOption> = phf_map! {
-    "include" => OwnerOption::INCLUDE,
-    "exclude" => OwnerOption::EXCLUDE,
-    "only" => OwnerOption::ONLY,
+    "INCLUDE" => OwnerOption::INCLUDE,
+    "EXCLUDE" => OwnerOption::EXCLUDE,
+    "ONLY" => OwnerOption::ONLY,
 };
 
 impl FromStr for OwnerOption {
@@ -44,9 +44,9 @@ impl Default for OwnerOption {
 impl fmt::Display for OwnerOption {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let value = match self {
-            OwnerOption::INCLUDE => "include".to_string(),
-            OwnerOption::EXCLUDE => "exclude".to_string(),
-            OwnerOption::ONLY => "only".to_string(),
+            OwnerOption::INCLUDE => "INCLUDE".to_string(),
+            OwnerOption::EXCLUDE => "EXCLUDE".to_string(),
+            OwnerOption::ONLY => "ONLY".to_string(),
         };
         write!(f, "{}", value)
     }
@@ -94,7 +94,7 @@ mod tests {
     #[test]
     fn test_display_trait() {
         let ft: OwnerOption = OwnerOption::INCLUDE;
-        assert_eq!(ft.to_string(), "include");
+        assert_eq!(ft.to_string(), "INCLUDE");
     }
 
     #[test]
