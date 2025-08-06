@@ -1,5 +1,5 @@
-// Import required modules and types from the project and external crates.
 use crate::builder::filing::FilingTypeOption;
+use crate::api::fetch_http_body_over_tcp;
 use crate::builder::owner::OwnerOption;
 use crate::edgar::EdgarParser;
 use crate::error::EDGARParserError;
@@ -42,7 +42,7 @@ impl EdgarQueryBuilder {
             count: "10".to_string(),
             search_text: Default::default(),
             edgar_parser,
-        } 
+        }
     }
 
     /// Builds and returns a `Url` to query the EDGAR system based on the builder's state.
@@ -70,6 +70,29 @@ impl EdgarQueryBuilder {
         // Parse the constructed string into a `Url` object.
         let query = Url::parse(&url)?;
         Ok(query)
+    }
+
+    pub async fn fetch_company_facts(&mut self) -> Result<serde_json::Value, EDGARParserError> {
+        if self.leading_zero_cik.is_empty() {
+            return Err(EDGARParserError::NotFound(
+                "Leading zero CIK is not set. Call create_from_ticker first.".to_string(),
+            ));
+        }
+
+        let body_response = fetch_http_body_over_tcp(&format!(
+            "data.sec.gov/api/xbrl/companyfacts/CIK{}.json",
+            self.leading_zero_cik
+        ))
+        .await
+        .map_err(|op: Box<dyn std::error::Error>| EDGARParserError::HttpError(op))?;
+
+        let json_response: serde_json::Value =
+            serde_json::from_str(&body_response).map_err(EDGARParserError::JSONParseError)?;
+
+        // Store the company facts data in the struct
+        self.company_facts = Some(json_response.clone());
+
+        Ok(json_response)
     }
 
     /// Validates the `dateb` string to ensure it is exactly 8 digits and forms a valid date (YYYYMMDD).
