@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::api::fetch_http_body;
 use crate::error::EDGARParserError;
 use log::debug;
@@ -12,9 +13,9 @@ use serde::Deserialize;
 /// - `leading_zero_cik`: Zero-padded string version of `cik_str`, exactly 10 digits.
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct EdgarParser {
-    pub cik_str: u32,
-    pub ticker: String,
-    pub title: String,
+    pub cik_str: Option<u32>,
+    pub ticker: Option<String>,
+    pub title: Option<String>,
     pub submissions: Option<serde_json::Value>,
     pub company_facts: Option<serde_json::Value>,
 
@@ -65,17 +66,16 @@ impl EdgarParser {
             .await
             .map_err(|op: Box<dyn std::error::Error>| EDGARParserError::HttpError(op))?;
 
-        let tickers: CompanyDataList =
-            serde_json::from_str(&json_body).map_err(EDGARParserError::JSONParseError)?;
+        // Deserialize JSON into a hashmap
+        let tickers: HashMap<String, CompanyData> = serde_json::from_str(&json_body)?;
 
         tickers
-            .tickers
             .iter()
-            .find(|&c| c.ticker == ticker)
-            .map(|c| EdgarParser {
-                cik_str: c.cik_str,
-                ticker: c.ticker.clone(),
-                title: c.title.clone(),
+            .find(|(_, c)| c.ticker == ticker)
+            .map(|(_, c)| EdgarParser {
+                cik_str: Some(c.cik_str),
+                ticker: Some(c.ticker.clone()),
+                title: Some(c.title.clone()),
                 leading_zero_cik: format!("{:010}", c.cik_str),
                 submissions: None,
                 company_facts: None,

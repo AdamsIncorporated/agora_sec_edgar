@@ -1,5 +1,5 @@
+use log::debug;
 use reqwest::header::USER_AGENT;
-use url::Url;
 
 /// Creates and returns a client capable of making requests to the EDGAR system.
 /// Ensure you set the `USER_AGENT` environment variable beforehand.
@@ -22,8 +22,13 @@ pub async fn fetch_http_body(url: &str) -> Result<String, Box<dyn std::error::Er
         .get(url)
         .header(USER_AGENT, user_agent)
         .send()
-        .await?;
-
+        .await
+        .unwrap_or_else(|e| {
+            panic!("HTTP request to {} failed: {}", url, e)
+        });
+    // debug the values
+    println!("DEBUG: GET {} response: {:?}", url, response);
+    
     // Check if status is success (200..299)
     if !response.status().is_success() {
         return Err(format!("HTTP request failed: {}", response.status()).into());

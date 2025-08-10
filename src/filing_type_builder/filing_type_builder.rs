@@ -59,7 +59,7 @@ impl EdgarFilingQueryBuilder {
         let url = format!(
             "{base}CIK={cik}&type={filing_type_string}&dateb={dateb_string}&owner={owner_string}&count={count}&search_text={search_text}&output=atom",
             base = self.base_url,
-            cik = self.edgar_parser.cik_str,
+            cik = self.edgar_parser.cik_str.unwrap(),
             filing_type_string = filing_type_string,
             dateb_string = dateb_string,
             owner_string = owner_string,
@@ -113,7 +113,7 @@ mod tests {
     async fn test_new_builder_defaults() {
         let parser = sample_parser().await.unwrap();
         let builder = EdgarFilingQueryBuilder::new(parser);
-        let cik_raw_num = builder.edgar_parser.cik_str;
+        let cik_raw_num = builder.edgar_parser.cik_str.unwrap();
 
         assert_eq!(cik_raw_num, 320193);
         assert_eq!(
