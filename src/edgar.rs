@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use crate::api::fetch_http_body;
 use crate::error::EDGARParserError;
 use serde::Deserialize;
+use std::collections::HashMap;
 
 /// Represents a company record with CIK, ticker, title, and a zero-padded CIK string.
 ///
@@ -37,12 +37,6 @@ pub struct CompanyData {
     pub cik_str: u32,
     pub ticker: String,
     pub title: String,
-}
-
-/// Wrapper struct for parsing a list of companies from SEC JSON.
-#[derive(Debug, Deserialize, PartialEq)]
-pub struct CompanyDataList {
-    pub tickers: Vec<CompanyData>,
 }
 
 impl EdgarParser {
@@ -216,30 +210,6 @@ mod tests {
 
         let parsed: EdgarParser = serde_json::from_str(json).unwrap();
         assert_eq!(parsed.leading_zero_cik, "0001045810");
-    }
-
-    #[test]
-    fn test_company_data_list_deserialize() {
-        let json = r#"
-            {
-                "tickers": [
-                    {
-                        "cik_str": 1045810,
-                        "ticker": "AAPL",
-                        "title": "Apple Inc."
-                    },
-                    {
-                        "cik_str": 320193,
-                        "ticker": "MSFT",
-                        "title": "Microsoft Corp"
-                    }
-                ]
-            }
-        "#;
-
-        let list: CompanyDataList = serde_json::from_str(json).unwrap();
-        assert_eq!(list.tickers.len(), 2);
-        assert_eq!(list.tickers[0].ticker, "AAPL");
     }
 
     #[tokio::test]

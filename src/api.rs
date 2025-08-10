@@ -1,4 +1,3 @@
-use log::debug;
 use reqwest::header::USER_AGENT;
 
 /// Creates and returns a client capable of making requests to the EDGAR system.
