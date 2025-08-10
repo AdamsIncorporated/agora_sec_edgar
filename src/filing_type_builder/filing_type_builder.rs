@@ -1,4 +1,4 @@
-use crate::api::fetch_http_body_over_tcp;
+use crate::api::fetch_http_body;
 use crate::edgar::EdgarParser;
 use crate::error::EDGARParserError;
 use crate::filing_type_builder::filing::FilingTypeOption;
@@ -90,7 +90,7 @@ impl EdgarFilingQueryBuilder {
     pub async fn fetch_filing_type(&self) -> Result<String, EDGARParserError> {
         let url = self.build()?;
         let url_string = url.to_string();
-        let body = fetch_http_body_over_tcp(&url_string).await?;
+        let body = fetch_http_body(&url_string).await?;
         Ok(body)
     }
 }
