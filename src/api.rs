@@ -12,42 +12,25 @@ use url::Url;
 ///
 /// Example:
 /// ```
-pub async fn fetch_http_body_over_tcp(url: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let parsed_url = Url::parse(url)?;
-    let host = parsed_url.host_str().ok_or("Invalid host")?;
-    let port = parsed_url.port_or_known_default().unwrap_or(80);
-    let user_agent = std::env::var("USER_AGENT").unwrap_or_else(|_| "MyRustApp support@myrustapp.com".to_string());
-    let path = parsed_url.path().to_string()
-        + parsed_url
-            .query()
-            .map(|q| format!("?{}", q))
-            .as_deref()
-            .unwrap_or("");
+pub async fn fetch_http_body(url: &str) -> Result<String, Box<dyn std::error::Error>> {
+    // Use custom user agent or fallback
+    let user_agent = std::env::var("USER_AGENT")
+        .unwrap_or_else(|_| "MyRustApp support@myrustapp.com".to_string());
 
-    let addr = format!("{}:{}", host, port);
-    let mut stream = TcpStream::connect(addr).await?;
+    let client = reqwest::Client::new();
 
-    let request = format!(
-        "GET {} HTTP/1.1\r\n\
-         Host: {}\r\n\
-         User-Agent: {}\r\n\
-         Connection: close\r\n\
-         Accept: */*\r\n\
-         \r\n",
-        path, host, user_agent
-    );
+    let response = client
+        .get(url)
+        .header(USER_AGENT, user_agent)
+        .send()
+        .await?;
 
-    stream.write_all(request.as_bytes()).await?;
+    // Check if status is success (200..299)
+    if !response.status().is_success() {
+        return Err(format!("HTTP request failed: {}", response.status()).into());
+    }
 
-    let mut response = Vec::new();
-    stream.read_to_end(&mut response).await?;
-
-    let response_str = String::from_utf8_lossy(&response);
-    let body = response_str
-        .split("\r\n\r\n")
-        .nth(1)
-        .ok_or("No response body found")?
-        .to_string();
+    let body = response.text().await?;
 
     if body.is_empty() {
         Err("Empty response body".into())

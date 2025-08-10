@@ -1,5 +1,6 @@
 use crate::api::fetch_http_body_over_tcp;
 use crate::error::EDGARParserError;
+use log::debug;
 use serde::Deserialize;
 
 /// Represents a company record with CIK, ticker, title, and a zero-padded CIK string.
@@ -54,12 +55,13 @@ impl EdgarParser {
     /// Returns `EDGARParserError::HttpError`, `EDGARParserError::JSONParseError`, or `EDGARParserError::NotFound`
     pub async fn new(ticker: &str) -> Result<Self, EDGARParserError> {
         let edgar_parser = Self::create_from_ticker(ticker).await?;
+        debug!("{:#?}", edgar_parser);
         Ok(edgar_parser)
     }
 
     /// Internal helper to create an `EdgarParser` by searching the ticker list.
     pub async fn create_from_ticker(ticker: &str) -> Result<EdgarParser, EDGARParserError> {
-        let json_body = fetch_http_body_over_tcp("www.sec.gov/files/company_tickers.json")
+        let json_body = fetch_http_body_over_tcp("https://www.sec.gov/files/company_tickers.json")
             .await
             .map_err(|op: Box<dyn std::error::Error>| EDGARParserError::HttpError(op))?;
 
@@ -189,6 +191,18 @@ mod tests {
     fn test_pad_cik_function() {
         let result = pad_cik(serde_json::json!(123456).into_deserializer()).unwrap();
         assert_eq!(result, "0000123456");
+    }
+
+    #[tokio::test]
+    async fn test_new_success() {
+        let ticker = "AAPL";
+        let result = EdgarParser::new(ticker).await;
+        assert!(
+            result.is_ok(),
+            "Expected Ok result but got Err: {:?}",
+            result.err()
+        );
+        result.unwrap();
     }
 
     #[test]

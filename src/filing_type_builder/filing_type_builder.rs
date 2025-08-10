@@ -104,7 +104,9 @@ mod tests {
     use crate::filing_type_builder::owner::OwnerOption;
 
     async fn sample_parser() -> Result<EdgarParser, EDGARParserError> {
-        Ok(EdgarParser::create_from_ticker("AAPL").await?)
+        let parser = EdgarParser::create_from_ticker("AAPL").await?;
+        println!("Sample parser created: {:?}", parser);
+        Ok(parser)
     }
 
     #[tokio::test]
