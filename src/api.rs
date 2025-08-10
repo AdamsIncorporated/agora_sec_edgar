@@ -1,5 +1,4 @@
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
+use reqwest::header::USER_AGENT;
 use url::Url;
 
 /// Creates and returns a client capable of making requests to the EDGAR system.
@@ -45,8 +44,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_http_response_body_valid_url() {
-        let url = "http://example.com/";
-        let result = fetch_http_body_over_tcp(url).await;
+        let url = "https://example.com/";
+        let result = fetch_http_body(url).await;
         assert!(
             result.is_ok(),
             "Expected OK response from example.com, got: {:?}",
@@ -62,8 +61,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_http_response_body_404() {
-        let url = "http://example.com/nonexistentpage";
-        let result = fetch_http_body_over_tcp(url).await;
+        let url = "https://example.com/nonexistentpage";
+        let result = fetch_http_body(url).await;
         assert!(
             result.is_ok(),
             "Expected valid HTTP response even for 404 page"
@@ -77,8 +76,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_http_response_body_invalid_domain() {
-        let url = "http://thisdomaindoesnotexist123456789.com/";
-        let result = fetch_http_body_over_tcp(url).await;
+        let url = "https://thisdomaindoesnotexist123456789.com/";
+        let result = fetch_http_body(url).await;
         assert!(
             result.is_err(),
             "Expected error for unreachable domain, got: {:?}",
@@ -89,7 +88,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_http_response_body_malformed_url() {
         let url = "not a url";
-        let result = fetch_http_body_over_tcp(url).await;
+        let result = fetch_http_body(url).await;
         assert!(
             result.is_err(),
             "Expected error for malformed URL input, got: {:?}",
@@ -99,8 +98,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_http_response_body_with_query_params() {
-        let url = "http://httpbin.org/get?name=test&lang=rust";
-        let result = fetch_http_body_over_tcp(url).await;
+        let url = "https://httpbin.org/get?name=test&lang=rust";
+        let result = fetch_http_body(url).await;
         assert!(result.is_ok(), "Expected OK response from httpbin.org");
         let body = result.unwrap();
         assert!(

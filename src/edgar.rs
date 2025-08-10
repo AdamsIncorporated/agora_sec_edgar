@@ -1,4 +1,4 @@
-use crate::api::fetch_http_body_over_tcp;
+use crate::api::fetch_http_body;
 use crate::error::EDGARParserError;
 use log::debug;
 use serde::Deserialize;
@@ -61,7 +61,7 @@ impl EdgarParser {
 
     /// Internal helper to create an `EdgarParser` by searching the ticker list.
     pub async fn create_from_ticker(ticker: &str) -> Result<EdgarParser, EDGARParserError> {
-        let json_body = fetch_http_body_over_tcp("https://www.sec.gov/files/company_tickers.json")
+        let json_body = fetch_http_body("https://www.sec.gov/files/company_tickers.json")
             .await
             .map_err(|op: Box<dyn std::error::Error>| EDGARParserError::HttpError(op))?;
 
@@ -94,7 +94,7 @@ impl EdgarParser {
             ));
         }
 
-        let body_response = fetch_http_body_over_tcp(&format!(
+        let body_response = fetch_http_body(&format!(
             "data.sec.gov/api/xbrl/companyfacts/CIK{}.json",
             self.leading_zero_cik
         ))
@@ -124,7 +124,7 @@ impl EdgarParser {
             ));
         }
 
-        let body_response = fetch_http_body_over_tcp(&format!(
+        let body_response = fetch_http_body(&format!(
             "data.sec.gov/submissions/CIK{}.json",
             self.leading_zero_cik
         ))
@@ -171,7 +171,7 @@ impl EdgarParser {
             fact, unit, year, quarter,
         );
 
-        let body_response = fetch_http_body_over_tcp(&path)
+        let body_response = fetch_http_body(&path)
             .await
             .map_err(|op: Box<dyn std::error::Error>| EDGARParserError::HttpError(op))?;
 
