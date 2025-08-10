@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use crate::api::fetch_http_body;
 use crate::error::EDGARParserError;
-use log::debug;
 use serde::Deserialize;
 
 /// Represents a company record with CIK, ticker, title, and a zero-padded CIK string.
@@ -56,7 +55,6 @@ impl EdgarParser {
     /// Returns `EDGARParserError::HttpError`, `EDGARParserError::JSONParseError`, or `EDGARParserError::NotFound`
     pub async fn new(ticker: &str) -> Result<Self, EDGARParserError> {
         let edgar_parser = Self::create_from_ticker(ticker).await?;
-        debug!("{:#?}", edgar_parser);
         Ok(edgar_parser)
     }
 
@@ -242,12 +240,6 @@ mod tests {
         let list: CompanyDataList = serde_json::from_str(json).unwrap();
         assert_eq!(list.tickers.len(), 2);
         assert_eq!(list.tickers[0].ticker, "AAPL");
-    }
-
-    // Example test using mock (requires dependency injection refactor to be fully testable)
-    #[tokio::test]
-    async fn test_create_from_ticker_mocked() {
-        assert!(EdgarParser::create_from_ticker("AAPL").await.is_err());
     }
 
     #[tokio::test]
