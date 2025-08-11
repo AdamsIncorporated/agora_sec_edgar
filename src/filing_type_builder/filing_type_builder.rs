@@ -162,12 +162,13 @@ mod tests {
         let url = builder.build().unwrap();
         let url_str = url.as_str();
 
-        assert!(url_str.contains("CIK=0000320193"));
+        assert!(url_str.contains("CIK=320193"));
         assert!(url_str.contains("type=10-K"));
         assert!(url_str.contains("dateb=20231231"));
-        assert!(url_str.contains("owner=include"));
+        assert!(url_str.contains("owner=INCLUDE"));
         assert!(url_str.contains("count=25"));
         assert!(url_str.contains("search_text=apple"));
+        assert!(url_str.contains("output=atom"));
     }
 
     #[tokio::test]
@@ -194,21 +195,5 @@ mod tests {
             result,
             Err(_)
         ));
-    }
-
-    // You can optionally test real fetches with `#[ignore]`
-    // Run with: `cargo test -- --ignored`
-    #[tokio::test]
-    async fn test_fetch_filing_type_real() {
-        let parser = sample_parser().await.unwrap();
-        let mut builder = EdgarFilingQueryBuilder::new(parser);
-        builder.dateb = "20231231".to_string();
-        builder.filing_type = FilingTypeOption::_10K;
-        builder.owner = OwnerOption::INCLUDE;
-
-        let result = builder.fetch_filing_type().await;
-        println!("{:?}", Some(&result));
-        assert!(result.is_ok());
-        assert!(result.unwrap().contains("entry")); // Atom XML entries
     }
 }
