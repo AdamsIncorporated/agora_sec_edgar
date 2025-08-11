@@ -4,6 +4,7 @@ use crate::error::EDGARParserError;
 use crate::filing_type_builder::filing::FilingTypeOption;
 use crate::filing_type_builder::owner::OwnerOption;
 use chrono::NaiveDate;
+use serde_xml_rs::from_str as xml_from_str;
 use url::Url;
 
 /// `EdgarFilingQueryBuilder` is a builder struct to construct a URL query for the SEC's EDGAR system.
@@ -87,11 +88,12 @@ impl EdgarFilingQueryBuilder {
         }
     }
 
-    pub async fn fetch_filing_type(&self) -> Result<String, EDGARParserError> {
+    pub async fn fetch_filing_type(&self) -> Result<String, Box<dyn std::error::Error>> {
         let url = self.build()?;
         let url_string = url.to_string();
         let body = fetch_http_body(&url_string).await?;
-        Ok(body)
+        let parsed = xml_from_str(&body)?;
+        Ok(parsed)
     }
 }
 
@@ -190,14 +192,13 @@ mod tests {
         let result = builder.fetch_filing_type().await;
         assert!(matches!(
             result,
-            Err(EDGARParserError::InvalidDateFormat(_))
+            Err(_)
         ));
     }
 
     // You can optionally test real fetches with `#[ignore]`
     // Run with: `cargo test -- --ignored`
     #[tokio::test]
-    #[ignore]
     async fn test_fetch_filing_type_real() {
         let parser = sample_parser().await.unwrap();
         let mut builder = EdgarFilingQueryBuilder::new(parser);
@@ -206,6 +207,7 @@ mod tests {
         builder.owner = OwnerOption::INCLUDE;
 
         let result = builder.fetch_filing_type().await;
+        println!("{:?}", Some(&result));
         assert!(result.is_ok());
         assert!(result.unwrap().contains("entry")); // Atom XML entries
     }
